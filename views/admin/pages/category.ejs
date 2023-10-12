@@ -1,0 +1,176 @@
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Product</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Nazox</a></li>
+                    <li class="breadcrumb-item active">Product</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+
+
+        <div class="card">
+            <div class="card-body">
+                <input type="file" id="images" class="form-control col-md-12 mt-2">
+                <input type="text" id="name" class="form-control col-md-12 mt-2" placeholder="Mahsulot nomi ... ">
+                
+                <button type="button" onclick="saveData()" class="btn btn-success mt-3">Save product</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Basic Example</h4>
+
+                <div class="table-responsive ">
+                    <table class="table mb-0 table-striped table-bordered text-center">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Catgory image</th>
+                                <th>Category name</th>
+                                <th>Product created</th>
+                                <th>Setting</th>
+                            </tr>
+                        </thead>
+                        <tbody class="setTABLE">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="offcanvas offcanvas-end" style="width: 40%;" tabindex="-1" id="EDIT_OFFCANVAS"
+    aria-labelledby="EDIT_OFFCANVAS">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">Update product</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+
+<script src="/api/axios.min.js"></script>
+<script src="/api/jquery.min.js"></script>
+
+
+
+<script>
+    const saveData = () => {
+        const name = document.getElementById("name")
+        const images = document.getElementById("images")
+
+        if(
+            name.value == "" ||
+            images.files[0] == ""
+        )
+        { 
+            alert ("Malumotni kiriting")
+        }
+        else {
+
+            const formData = new FormData()
+            formData.append("name", name.value)
+            formData.append("images", images.files[0])
+
+
+            axios.post("/category/create", formData).then(() => {
+                setAll()
+            })
+        }
+
+        
+
+
+    }
+
+
+    const setAll = () => {
+        axios.get("/category/all").then( async (res) => {
+            const data = res.data
+            const setTABLE = $(".setTABLE")
+            await setTABLE.html("")
+            data.forEach((element, index )=> {
+                setTABLE.append(`
+                    <tr>
+                        <th>${index += 1}</th>
+                        <th>
+                            <img style="width: 50px;" src="/categoryImage/${element.image[0]}" />
+                        </th>
+                        <td>${element.name}</td>
+                        <td>${new Date(element.date).toLocaleString()}</td>
+                        <td>
+                            <button  data-bs-toggle="offcanvas" data-bs-target="#EDIT_OFFCANVAS" aria-controls="EDIT_OFFCANVAS" onclick="editData('${element._id}')" type="button" class="btn btn-warning">Edit</button>
+                            <button onclick="deleteData('${element._id}')" type="button" class="btn btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    setAll()
+
+
+    const editData = (id) => {
+        axios.get(`/category/${id}`).then(async (res) => {
+            const data = res.data;
+            const appendingHTML = $(".GET_DATA")
+            appendingHTML.html("")
+            appendingHTML.append(`
+            <input type="file" id="CATEGORY_IMAGE" value="" class="form-control col-md-12 mt-2">
+            <input type="text" id="CATEGORY_NAME" value = "${data.name}" class="form-control col-md-12 mt-2" placeholder="Mahsulot nomi ... ">
+            <button type="button" onclick="update_DATA('${data._id}')" class="btn btn-success mt-3">Submit</button>
+            `)
+        })
+    }
+    
+    const update_DATA = (id) => {
+
+        const CATEGORY_IMAGE = document.getElementById("CATEGORY_IMAGE")
+        const CATEGORY_NAME = document.getElementById("CATEGORY_NAME")
+
+        if (
+            CATEGORY_IMAGE.files[0] == "" ||
+            CATEGORY_NAME.value == ""
+        )
+        { 
+            alert("Malumotni toliq kiriting")
+        }
+
+        else {
+            const formData = new FormData()
+
+            formData.append("name", CATEGORY_NAME.value)
+            formData.append("images", CATEGORY_IMAGE.files[0] )
+
+            axios.put(`/category/${id}`, formData).then((res) => {
+                setAll()
+            })    
+        }
+
+
+    }
+
+
+
+
+    const deleteData = (id) => {
+        axios.delete(`/category/${id}`).then((res) => {
+            setAll()
+        })
+    }
+</script>
